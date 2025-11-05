@@ -33,11 +33,16 @@ class Cell(FixedAgent):
 
     def determine_state(self):
         """Compute the next state based on the custom rules."""
+        # Obtener dimensiones del grid
+        width = self.model.grid.width
+        height = self.model.grid.height
+
         # Asignar nombres a las celdas vecinas basadas en sus coordenadas relativas
         # Consideramos solo los vecinos de arriba: top-left, top-center, top-right
-        izquierda_pos = (self.pos[0] - 1) % 50, (self.pos[1] + 1) % 50 # arriba-izquierda
-        arriba_pos = self.pos[0], (self.pos[1] + 1) % 50        # arriba
-        derecha_pos = (self.pos[0] + 1) % 50, (self.pos[1] + 1) % 50     # arriba-derecha
+        # Hacemos el % para que las posiciones se mantengan dentro del grid
+        izquierda_pos = (self.pos[0] - 1) % width, (self.pos[1] + 1) % height # arriba-izquierda
+        arriba_pos = self.pos[0], (self.pos[1] + 1) % height        # arriba
+        derecha_pos = (self.pos[0] + 1) % width, (self.pos[1] + 1) % height     # arriba-derecha
 
         izquierda = 0
         arriba = 0
@@ -50,14 +55,14 @@ class Cell(FixedAgent):
                 arriba = neighbor.is_alive
             elif neighbor.pos == derecha_pos:
                 derecha = neighbor.is_alive
-        # print(izquierda, arriba, derecha)
 
         self._next_state = self.state
-        
-        # SOLUCION 1: 
-        #Reglas
-        if not self.is_alive:
-             # 111 -> 0
+
+        # SIMULACION 1:
+        # Si la posicion actual llega a la ultima celda posible, entonces no se aplican las reglas
+        if not self.is_alive and izquierda_pos[1] != 0 and arriba_pos[1] != 0 and derecha_pos[1] != 0:
+            # Reglas
+            # 111 -> 0
             if izquierda and arriba and derecha:
                 self._next_state = self.DEAD
             # 110 -> 1

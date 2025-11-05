@@ -24,7 +24,7 @@ class ConwaysGameOfLife(Model):
         self.grid = OrthogonalMooreGrid((width, height), capacity=1, torus=True)
 
         # Place a cell at each location, with some initialized to
-        # ALIVE and some to DEAD.
+        # Inicializamos algunas celdas ALIVE solo en la fila de arriba
         for cell in self.grid.all_cells:
             Cell(
                 self,
