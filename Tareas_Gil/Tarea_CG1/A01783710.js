@@ -341,8 +341,8 @@ function setupUI(gl) {
     rotFolder.add(objects.face.rr, 'z', 0, Math.PI * 2);
 
     const scaleFolder = faceFolder.addFolder('Scale');
-    scaleFolder.add(objects.face.s, 'x', 0.1, 3);
-    scaleFolder.add(objects.face.s, 'y', 0.1, 3);
+    scaleFolder.add(objects.face.s, 'x', -5, 5);
+    scaleFolder.add(objects.face.s, 'y', -5, 5);
 
     const colorFolder = faceFolder.addFolder('Color');
     colorFolder.addColor(objects.leftEye, 'color').name('Eyes').onChange((value) => {
