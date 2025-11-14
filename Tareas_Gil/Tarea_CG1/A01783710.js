@@ -140,19 +140,19 @@ function main() {
     const faceVAO = twgl.createVAOFromBufferInfo(gl, programInfo, faceBufferInfo);
 
     //Ojo izquierdo. Posicionado en (-10, -50) para que quede relativo a la cara
-    const leftEyeArrays = generateData(10, -10, -50, 15);
+    const leftEyeArrays = generateData(30, -10, -50, 15);
     //Crear buffers y VAO para el ojo izquierdo
     const leftEyeBufferInfo = twgl.createBufferInfoFromArrays(gl, leftEyeArrays);
     const leftEyeVAO = twgl.createVAOFromBufferInfo(gl, programInfo, leftEyeBufferInfo);
 
     //Ojo derecho. Posicionado en (10, -50) para que quede relativo a la cara
-    const rightEyeArrays = generateData(20, 10, -50, 15);
+    const rightEyeArrays = generateData(30, 10, -50, 15);
     //Crear buffers y VAO para el ojo derecho
     const rightEyeBufferInfo = twgl.createBufferInfoFromArrays(gl, rightEyeArrays);
     const rightEyeVAO = twgl.createVAOFromBufferInfo(gl, programInfo, rightEyeBufferInfo);
 
     //Boca. Posicionada en (0, 40) para que quede relativa a la cara
-    const mouthArrays = generateData(15, 0, 40, 25);
+    const mouthArrays = generateData(25, 0, 40, 25);
     //Crear buffers y VAO para la boca
     const mouthBufferInfo = twgl.createBufferInfoFromArrays(gl, mouthArrays);
     const mouthVAO = twgl.createVAOFromBufferInfo(gl, programInfo, mouthBufferInfo);
