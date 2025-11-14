@@ -43,7 +43,7 @@ function main() {
 
     const programInfo = twgl.createProgramInfo(gl, [vsGLSL, fsGLSL]);
 
-    const sides = 6;
+    const sides = 20;
 
     const arrays = generateData(sides);
 
@@ -91,10 +91,9 @@ function generateData(sides) {
         arrays.a_position.data.push(x);
         arrays.a_position.data.push(y);
         // Generate a random color for the vertex
-        arrays.a_color.data.push(Math.random());
-        arrays.a_color.data.push(Math.random());
-        arrays.a_color.data.push(Math.random());
-        arrays.a_color.data.push(1);
+        arrays.a_color.data.push(255,255,0, 1);
+        arrays.a_color.data.push(255, 255, 0, 1);
+        arrays.a_color.data.push(255, 255, 0, 1);
         // Define the triangles, in counter clockwise order
         arrays.indices.data.push(0);
         arrays.indices.data.push(s + 1);

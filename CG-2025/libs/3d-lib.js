@@ -34,7 +34,7 @@ class V3 {
             dest[0] = 0;
             dest[1] = 0;
             dest[2] = 0;
-        } else { 
+        } else {
             dest[0] = v[0] / len;
             dest[1] = v[1] / len;
             dest[2] = v[2] / len;
@@ -120,10 +120,29 @@ class M4 {
 
         // The matrices are oriented transposed,
         // so the multiplication must be adjusted accordingly
-        return [ 1,  0,  0,  0,
-                 0,  1,  0,  0,
-                 0,  0,  1,  0,
-                 0,  0,  0,  1];
+        return [
+            //Columna 1
+            a00 * b00 + a10 * b01 + a20 * b02 + a30 * b03,
+            a01 * b00 + a11 * b01 + a21 * b02 + a31 * b03,
+            a02 * b00 + a12 * b01 + a22 * b02 + a32 * b03,
+            a03 * b00 + a13 * b01 + a23 * b02 + a33 * b03,
+            //Columna 2
+            a00 * b10 + a10 * b11 + a20 * b12 + a30 * b13,
+            a01 * b10 + a11 * b11 + a21 * b12 + a31 * b13,
+            a02 * b10 + a12 * b11 + a22 * b12 + a32 * b13,
+            a03 * b10 + a13 * b11 + a23 * b12 + a33 * b13,
+            //Columna 3
+            a00 * b20 + a10 * b21 + a20 * b22 + a30 * b23,
+            a01 * b20 + a11 * b21 + a21 * b22 + a31 * b23,
+            a02 * b20 + a12 * b21 + a22 * b22 + a32 * b23,
+            a03 * b20 + a13 * b21 + a23 * b22 + a33 * b23,
+            //Columna 4
+            a00 * b30 + a10 * b31 + a20 * b32 + a30 * b33,
+            a01 * b30 + a11 * b31 + a21 * b32 + a31 * b33,
+            a02 * b30 + a12 * b31 + a22 * b32 + a32 * b33,
+            a03 * b30 + a13 * b31 + a23 * b32 + a33 * b33
+        ];
+
     }
 
     static identity() {
@@ -131,42 +150,81 @@ class M4 {
             1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, 1, 0,
-            0, 0, 0, 1 ];
+            0, 0, 0, 1];
     }
 
     static translation(v) {
-        return [ 1,  0,  0,  0,
-                 0,  1,  0,  0,
-                 0,  0,  1,  0,
-                 0,  0,  0,  1];
+        let tx = v[0];
+        let ty = v[1];
+        let tz = v[2];
+        return [1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            tx, ty, tz, 1];
     }
 
     static rotationX(angleRadians) {
-        return [ 1,  0,  0,  0,
-                 0,  1,  0,  0,
-                 0,  0,  1,  0,
-                 0,  0,  0,  1];
+        /*
+        Matriz original:
+        [ 1,  0,  0,  0,
+          0,  c, -s,  0,
+          0,  s,  c,  0,
+          0,  0,  0,  1]
+        */
+
+        //Traspuesta de la matriz original
+        let c = Math.cos(angleRadians);
+        let s = Math.sin(angleRadians);
+        return [1, 0, 0, 0,
+            0, c, s, 0,
+            0, -s, c, 0,
+            0, 0, 0, 1];
     }
 
     static rotationY(angleRadians) {
-        return [ 1,  0,  0,  0,
-                 0,  1,  0,  0,
-                 0,  0,  1,  0,
-                 0,  0,  0,  1];
+        /*
+        Matriz original:
+        [ c, 0,  -s,  0,
+          0,  1,  0,  0,
+          s,  0,  c,  0,
+          0,  0,  0,  1]
+        */
+
+        //Traspuesta de la matriz original
+        let c = Math.cos(angleRadians);
+        let s = Math.sin(angleRadians);
+        return [c, 0, -s, 0,
+            0, 1, 0, 0,
+            s, 0, c, 0,
+            0, 0, 0, 1];
     }
 
     static rotationZ(angleRadians) {
-        return [ 1,  0,  0,  0,
-                 0,  1,  0,  0,
-                 0,  0,  1,  0,
-                 0,  0,  0,  1];
+        /*
+        Matriz original:
+        [ c, -s,  0,  0,
+          s,  c,  0,  0,
+          0,  0,  1,  0,
+          0,  0,  0,  1]
+        */
+
+        //Traspuesta de la matriz original
+        let c = Math.cos(angleRadians);
+        let s = Math.sin(angleRadians);
+        return [c, s, 0, 0,
+            -s, c, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1];
     }
 
     static scale(v) {
-        return [ 1,  0,  0,  0,
-                 0,  1,  0,  0,
-                 0,  0,  1,  0,
-                 0,  0,  0,  1];
+        let sx = v[0];
+        let sy = v[1];
+        let sz = v[2];
+        return [sx, 0, 0, 0,
+            0, sy, 0, 0,
+            0, 0, sz, 0,
+            0, 0, 0, 1];
     }
 
     /**
@@ -223,16 +281,16 @@ class M4 {
         const m32 = m[3 * 4 + 2];
         const m33 = m[3 * 4 + 3];
 
-        dst[ 0] = m00;
-        dst[ 1] = m10;
-        dst[ 2] = m20;
-        dst[ 3] = m30;
-        dst[ 4] = m01;
-        dst[ 5] = m11;
-        dst[ 6] = m21;
-        dst[ 7] = m31;
-        dst[ 8] = m02;
-        dst[ 9] = m12;
+        dst[0] = m00;
+        dst[1] = m10;
+        dst[2] = m20;
+        dst[3] = m30;
+        dst[4] = m01;
+        dst[5] = m11;
+        dst[6] = m21;
+        dst[7] = m31;
+        dst[8] = m02;
+        dst[9] = m12;
         dst[10] = m22;
         dst[11] = m32;
         dst[12] = m03;
@@ -269,16 +327,16 @@ class M4 {
         const m31 = m[3 * 4 + 1];
         const m32 = m[3 * 4 + 2];
         const m33 = m[3 * 4 + 3];
-        const tmp_0  = m22 * m33;
-        const tmp_1  = m32 * m23;
-        const tmp_2  = m12 * m33;
-        const tmp_3  = m32 * m13;
-        const tmp_4  = m12 * m23;
-        const tmp_5  = m22 * m13;
-        const tmp_6  = m02 * m33;
-        const tmp_7  = m32 * m03;
-        const tmp_8  = m02 * m23;
-        const tmp_9  = m22 * m03;
+        const tmp_0 = m22 * m33;
+        const tmp_1 = m32 * m23;
+        const tmp_2 = m12 * m33;
+        const tmp_3 = m32 * m13;
+        const tmp_4 = m12 * m23;
+        const tmp_5 = m22 * m13;
+        const tmp_6 = m02 * m33;
+        const tmp_7 = m32 * m03;
+        const tmp_8 = m02 * m23;
+        const tmp_9 = m22 * m03;
         const tmp_10 = m02 * m13;
         const tmp_11 = m12 * m03;
         const tmp_12 = m20 * m31;
@@ -305,21 +363,21 @@ class M4 {
 
         const d = 1.0 / (m00 * t0 + m10 * t1 + m20 * t2 + m30 * t3);
 
-        dst[ 0] = d * t0;
-        dst[ 1] = d * t1;
-        dst[ 2] = d * t2;
-        dst[ 3] = d * t3;
-        dst[ 4] = d * ((tmp_1 * m10 + tmp_2 * m20 + tmp_5 * m30) -
+        dst[0] = d * t0;
+        dst[1] = d * t1;
+        dst[2] = d * t2;
+        dst[3] = d * t3;
+        dst[4] = d * ((tmp_1 * m10 + tmp_2 * m20 + tmp_5 * m30) -
             (tmp_0 * m10 + tmp_3 * m20 + tmp_4 * m30));
-        dst[ 5] = d * ((tmp_0 * m00 + tmp_7 * m20 + tmp_8 * m30) -
+        dst[5] = d * ((tmp_0 * m00 + tmp_7 * m20 + tmp_8 * m30) -
             (tmp_1 * m00 + tmp_6 * m20 + tmp_9 * m30));
-        dst[ 6] = d * ((tmp_3 * m00 + tmp_6 * m10 + tmp_11 * m30) -
+        dst[6] = d * ((tmp_3 * m00 + tmp_6 * m10 + tmp_11 * m30) -
             (tmp_2 * m00 + tmp_7 * m10 + tmp_10 * m30));
-        dst[ 7] = d * ((tmp_4 * m00 + tmp_9 * m10 + tmp_10 * m20) -
+        dst[7] = d * ((tmp_4 * m00 + tmp_9 * m10 + tmp_10 * m20) -
             (tmp_5 * m00 + tmp_8 * m10 + tmp_11 * m20));
-        dst[ 8] = d * ((tmp_12 * m13 + tmp_15 * m23 + tmp_16 * m33) -
+        dst[8] = d * ((tmp_12 * m13 + tmp_15 * m23 + tmp_16 * m33) -
             (tmp_13 * m13 + tmp_14 * m23 + tmp_17 * m33));
-        dst[ 9] = d * ((tmp_13 * m03 + tmp_18 * m23 + tmp_21 * m33) -
+        dst[9] = d * ((tmp_13 * m03 + tmp_18 * m23 + tmp_21 * m33) -
             (tmp_12 * m03 + tmp_19 * m23 + tmp_20 * m33));
         dst[10] = d * ((tmp_14 * m03 + tmp_19 * m13 + tmp_22 * m33) -
             (tmp_15 * m03 + tmp_18 * m13 + tmp_23 * m33));
@@ -363,18 +421,18 @@ class M4 {
         const f = Math.tan(Math.PI * 0.5 - 0.5 * fieldOfViewYInRadians);
         const rangeInv = 1.0 / (zNear - zFar);
 
-        dst[0]  = f / aspect;
-        dst[1]  = 0;
-        dst[2]  = 0;
-        dst[3]  = 0;
+        dst[0] = f / aspect;
+        dst[1] = 0;
+        dst[2] = 0;
+        dst[3] = 0;
 
-        dst[4]  = 0;
-        dst[5]  = f;
-        dst[6]  = 0;
-        dst[7]  = 0;
+        dst[4] = 0;
+        dst[5] = f;
+        dst[6] = 0;
+        dst[7] = 0;
 
-        dst[8]  = 0;
-        dst[9]  = 0;
+        dst[8] = 0;
+        dst[9] = 0;
         dst[10] = (zNear + zFar) * rangeInv;
         dst[11] = -1;
 
@@ -404,18 +462,18 @@ class M4 {
     static ortho(left, right, bottom, top, near, far, dst) {
         dst = dst || new Float32Array(16);
 
-        dst[0]  = 2 / (right - left);
-        dst[1]  = 0;
-        dst[2]  = 0;
-        dst[3]  = 0;
+        dst[0] = 2 / (right - left);
+        dst[1] = 0;
+        dst[2] = 0;
+        dst[3] = 0;
 
-        dst[4]  = 0;
-        dst[5]  = 2 / (top - bottom);
-        dst[6]  = 0;
-        dst[7]  = 0;
+        dst[4] = 0;
+        dst[5] = 2 / (top - bottom);
+        dst[6] = 0;
+        dst[7] = 0;
 
-        dst[8]  = 0;
-        dst[9]  = 0;
+        dst[8] = 0;
+        dst[9] = 0;
         dst[10] = 2 / (near - far);
         dst[11] = 0;
 
@@ -452,16 +510,16 @@ class M4 {
         const dy = (top - bottom);
         const dz = (near - far);
 
-        dst[ 0] = 2 * near / dx;
-        dst[ 1] = 0;
-        dst[ 2] = 0;
-        dst[ 3] = 0;
-        dst[ 4] = 0;
-        dst[ 5] = 2 * near / dy;
-        dst[ 6] = 0;
-        dst[ 7] = 0;
-        dst[ 8] = (left + right) / dx;
-        dst[ 9] = (top + bottom) / dy;
+        dst[0] = 2 * near / dx;
+        dst[1] = 0;
+        dst[2] = 0;
+        dst[3] = 0;
+        dst[4] = 0;
+        dst[5] = 2 * near / dy;
+        dst[6] = 0;
+        dst[7] = 0;
+        dst[8] = (left + right) / dx;
+        dst[9] = (top + bottom) / dy;
         dst[10] = far / dz;
         dst[11] = -1;
         dst[12] = 0;
@@ -501,16 +559,16 @@ class M4 {
         V3.normalize(V3.cross(up, zAxis, xAxis), xAxis);
         V3.normalize(V3.cross(zAxis, xAxis, yAxis), yAxis);
 
-        dst[ 0] = xAxis[0];
-        dst[ 1] = xAxis[1];
-        dst[ 2] = xAxis[2];
-        dst[ 3] = 0;
-        dst[ 4] = yAxis[0];
-        dst[ 5] = yAxis[1];
-        dst[ 6] = yAxis[2];
-        dst[ 7] = 0;
-        dst[ 8] = zAxis[0];
-        dst[ 9] = zAxis[1];
+        dst[0] = xAxis[0];
+        dst[1] = xAxis[1];
+        dst[2] = xAxis[2];
+        dst[3] = 0;
+        dst[4] = yAxis[0];
+        dst[5] = yAxis[1];
+        dst[6] = yAxis[2];
+        dst[7] = 0;
+        dst[8] = zAxis[0];
+        dst[9] = zAxis[1];
         dst[10] = zAxis[2];
         dst[11] = 0;
         dst[12] = eye[0];
