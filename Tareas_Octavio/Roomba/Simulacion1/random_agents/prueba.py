@@ -11,9 +11,9 @@ class RandomModel(Model):
         num_agents: Number of agents in the simulation
         height, width: The size of the grid to model
     """
-    def __init__(self, num_agents=1, num_obstacles=1, rate_trash=0.2, max_steps=1000, width=8, height=8, seed=42):
+    def _init_(self, num_agents=1, num_obstacles=1, rate_trash=0.2, max_steps=1000, width=8, height=8, seed=42):
 
-        super().__init__(seed=seed)
+        super()._init_(seed=seed)
 
         # Initialize model parameters
         self.num_agents = num_agents
