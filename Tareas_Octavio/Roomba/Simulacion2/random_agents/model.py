@@ -11,13 +11,13 @@ class RandomModel(Model):
         num_agents: Number of agents in the simulation
         height, width: The size of the grid to model
     """
-    def __init__(self, num_agents=1, num_obstacles=1, rate_trash=0.2, max_steps=1000, width=8, height=8, seed=42):
+    def __init__(self, num_agents=1, rate_obstacles=0.1, rate_trash=0.2, max_steps=1000, width=8, height=8, seed=42):
 
         super().__init__(seed=seed)
 
         # Initialize model parameters
         self.num_agents = num_agents
-        self.num_obstacles = num_obstacles
+        self.num_obstacles = int(rate_obstacles * (width - 2) * (height - 2))
         self.num_trash = int(rate_trash * (width - 2) * (height - 2))
         self.max_steps = max_steps
         self.seed = seed
@@ -32,8 +32,9 @@ class RandomModel(Model):
 
         # Setup data collection
         model_reporters = {
-            "Trash Collected %": lambda m: (m.num_trash - len(m.agents_by_type[TrashAgent])) / m.num_trash * 100,
-            "Battery %": lambda m: next(agent.battery for agent in m.agents_by_type[Roomba])
+            "Roombas Alive": lambda m: len(m.agents_by_type[Roomba]),
+            "Trash Collected [%]": lambda m: 100 - ((len(m.agents_by_type[TrashAgent]) * 100) / m.num_trash),
+            "Time (Steps)": lambda m: m.steps
         }
         self.datacollector = DataCollector(model_reporters)
 
@@ -45,12 +46,14 @@ class RandomModel(Model):
 
         # Create the border cells
         for _, cell in enumerate(self.grid):
-            if cell.coordinate == (1,1):
-                # Place roomba and station at (1,1)
-                Roomba(self, cell=cell)
-                Station(self, cell=cell)
             if cell.coordinate in border:
                 ObstacleAgent(self, cell=cell)
+
+        # Create stations and roombas
+        roomba_cells = self.random.choices(self.grid.empties.cells, k=self.num_agents)
+        for cell in roomba_cells:
+            Station(self, cell=cell)
+            Roomba(self, cell=cell)
 
         ObstacleAgent.create_agents(
             self,
@@ -70,6 +73,11 @@ class RandomModel(Model):
 
     def step(self):
         '''Advance the model by one step.'''
+
+        # If the model is not running, do nothing
+        if not self.running:
+            return
+        
         self.agents.shuffle_do("step")
         
         # Create visual markers for newly visited cells
@@ -88,6 +96,13 @@ class RandomModel(Model):
         self.datacollector.collect(self)
 
         # Stop the model if all trash is collected
-        # Convert max_steps to int because its detected as string from the input
         if len(self.agents_by_type[TrashAgent]) == 0 or self.steps >= int(self.max_steps):
             self.running = False
+
+            # Only print the last step
+            df = self.datacollector.get_model_vars_dataframe()
+            print(df.tail(1))
+
+            # Add steps by each roomba to the output
+            for agent in self.agents_by_type[Roomba]:
+                print(f"Roomba {agent.unique_id}: Battery {agent.battery}%, Steps {agent.steps}")

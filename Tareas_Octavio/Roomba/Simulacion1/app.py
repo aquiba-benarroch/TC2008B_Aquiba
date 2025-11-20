@@ -1,4 +1,4 @@
-from random_agents.agent import Roomba, ObstacleAgent, TrashAgent, Station
+from random_agents.agent import Roomba, ObstacleAgent, TrashAgent, Station, VisitedCell
 from random_agents.model import RandomModel
 
 from mesa.visualization import (
@@ -36,6 +36,11 @@ def random_portrayal(agent):
         portrayal.color = "green"
         portrayal.marker = "x"
         portrayal.size = 30
+    elif isinstance(agent, VisitedCell):
+        portrayal.color = "orange"
+        portrayal.marker = "s"
+        portrayal.size = 50
+        portrayal.alpha = 0.3  # Semi-transparente
 
     return portrayal
 

@@ -19,12 +19,14 @@ class Roomba(CellAgent):
         super().__init__(model)
         self.cell = cell  # Current cell of the Roomba
         self.stationCells = [self.cell.coordinate]  # List of known stations (starts with its origin station)
-        self.state = "idle"  # Current state of the Roomba (idle, ready, moving, cleaning, returning, recharging, waiting)
+        self.state = "idle"  # Current state of the Roomba (idle, ready, moving, cleaning, returning, recharging, waiting, communicating)
         self.battery = 100  # Battery level (0-100)
         self.visited_cells = {self.cell.coordinate}  # Set of coordinates of visited cells
         self.trash_known_cells = set()  # Set of cells with known trash but not yet cleaned
         self.pathToStation = []  # Calculated path to the nearest station
         self.distance_to_station = 0  # Calculated distance to the nearest station
+        self.hasExchangedInfo = False  # Flag to control if info was recently exchanged
+        self.exchange_timer = 0  # Timer to avoid multiple consecutive exchanges
         self.steps = 0  # Step counter
         self.hasToRecharge = False  # Flag indicating if it needs to recharge
     
@@ -34,7 +36,7 @@ class Roomba(CellAgent):
         self.distanceToStation()
 
         # Safety margin to avoid running out of battery on the way
-        step_margin = 5
+        step_margin = 20
         total_distance = self.distance_to_station + step_margin
 
         # If battery is less than or equal to distance + margin, must return to recharge
@@ -126,6 +128,28 @@ class Roomba(CellAgent):
         self.state = "moving"
         return next_cell
 
+    def checkRoomba(self, roomba_cell):
+        """Checks if there are other Roombas in neighboring cells to exchange information."""
+        # Get cells with other Roombas
+        roomba_cells = roomba_cell.neighborhood.select(
+            lambda cell: any(isinstance(obj, Roomba) 
+            and obj != self for obj in cell.agents)
+        )
+
+        # Get the first Roomba agent found in those cells
+        roomba_agent = next(
+            (obj for cell in roomba_cells for obj in cell.agents
+            if isinstance(obj, Roomba) and obj != self), None
+        )
+
+        # If found another Roomba and hasn't exchanged info recently, communicate
+        if roomba_agent and not self.hasExchangedInfo:
+            self.state = "communicating"
+        else:
+            # If no Roomba or already exchanged info, proceed to check trash
+            self.state = "checkTrash"
+        return roomba_agent
+
     def move(self, cell):
         """Moves the Roomba to the specified cell."""
 
@@ -143,7 +167,6 @@ class Roomba(CellAgent):
         # Mark cell as visited in the model's grid for visualization
         # This will allow VisitedCell markers to be created in orange color
         self.model.visited_grid.add(cell.coordinate)
-        
         self.steps += 1
         
         # Check if arrived at a station
@@ -388,6 +411,23 @@ class Roomba(CellAgent):
 
         self.distance_to_station = min_distance
         return nearest_station
+
+    def exchangeInfo(self, other_roomba):
+        """Updates the set of visited cells and known stations with those from the other Roomba."""
+        # Exchange visited cells information
+        for cell in other_roomba.visited_cells:
+            if cell not in self.visited_cells:
+                self.visited_cells.add(cell)
+        
+        # Exchange known stations information
+        for station_coord in other_roomba.stationCells:
+            if station_coord not in self.stationCells:
+                self.stationCells.append(station_coord)
+        
+        # Set timer to avoid multiple exchanges in a short time
+        self.hasExchangedInfo = True
+        self.exchange_timer = 10  # Steps before allowing new exchanges
+        self.state = "idle"
     
     def stationOccupied(self, station_cell):
         """Checks if a station cell is occupied by another recharging Roomba."""
@@ -408,6 +448,7 @@ class Roomba(CellAgent):
         - returning: Returning to station to recharge
         - recharging: Recharging battery at the station
         - ready: Ready to work (sufficient battery)
+        - communicating: Exchanging information with another Roomba
         - cleaning: Cleaning trash
         - moving: Moving to another cell
         """
@@ -431,16 +472,29 @@ class Roomba(CellAgent):
             # If recharging, increase battery
             self.recharge()
         elif self.state == "ready":
-            # If ready to work, look for trash
-            trash_cell = self.checkTrash()
-            if self.state == "cleaning":
-                # If there's trash, clean it
-                self.clean(trash_cell)
-            elif self.state == "checkObstacles":
-                # If no trash, find the next cell to explore
-                next_cell = self.checkObstacles()
-                if self.state == "moving":
-                    self.move(next_cell)
+            # If ready to work
+            roomba_agent = self.checkRoomba(self.cell)  # Check if there are other Roombas nearby
+            if self.state == "communicating":
+                # If found another Roomba, exchange information
+                self.exchangeInfo(roomba_agent)
+            elif self.state == "checkTrash":
+                # If no Roomba or already exchanged info, look for trash
+                trash_cell = self.checkTrash()
+                if self.state == "cleaning":
+                    # If there's trash, clean it
+                    self.clean(trash_cell)
+                elif self.state == "checkObstacles":
+                    # If no trash, find the next cell to explore
+                    next_cell = self.checkObstacles()
+                    if self.state == "moving":
+                        self.move(next_cell)
+        
+        # Handle information exchange timer
+        if self.exchange_timer > 0:
+            self.exchange_timer -= 1
+            if self.exchange_timer == 0:
+                # When timer reaches 0, can exchange information again
+                self.hasExchangedInfo = False
         
         # Always decrease battery by 1 at the end of the step, except when recharging or waiting
         if self.state not in ["recharging", "waiting"]:
