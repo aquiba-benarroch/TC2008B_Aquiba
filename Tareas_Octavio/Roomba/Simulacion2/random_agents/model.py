@@ -34,7 +34,9 @@ class RandomModel(Model):
         model_reporters = {
             "Roombas Alive": lambda m: len(m.agents_by_type[Roomba]),
             "Trash Collected [%]": lambda m: 100 - ((len(m.agents_by_type[TrashAgent]) * 100) / m.num_trash),
-            "Time (Steps)": lambda m: m.steps
+            "Time (Steps)": lambda m: m.steps,
+            "Battery %": lambda m: sum(agent.battery for agent in m.agents_by_type[Roomba]) / len(m.agents_by_type[Roomba]) if len(m.agents_by_type[Roomba]) > 0 else 0,
+            "Roomba Steps": lambda m: sum(agent.steps for agent in m.agents_by_type[Roomba]) / len(m.agents_by_type[Roomba]) if len(m.agents_by_type[Roomba]) > 0 else 0
         }
         self.datacollector = DataCollector(model_reporters)
 
@@ -99,10 +101,13 @@ class RandomModel(Model):
         if len(self.agents_by_type[TrashAgent]) == 0 or self.steps >= int(self.max_steps):
             self.running = False
 
-            # Only print the last step
+            # Print final stats
+            print("SIMULATION FINAL STATS")
             df = self.datacollector.get_model_vars_dataframe()
             print(df.tail(1))
-
-            # Add steps by each roomba to the output
+            
+            print("Individual Roomba Stats:")
             for agent in self.agents_by_type[Roomba]:
-                print(f"Roomba {agent.unique_id}: Battery {agent.battery}%, Steps {agent.steps}")
+                print(f"  Roomba {agent.unique_id}: Battery {agent.battery}%, Steps {agent.steps}")
+
+        

@@ -33,7 +33,9 @@ class RandomModel(Model):
         # Setup data collection
         model_reporters = {
             "Trash Collected %": lambda m: (m.num_trash - len(m.agents_by_type[TrashAgent])) / m.num_trash * 100,
-            "Battery %": lambda m: next(agent.battery for agent in m.agents_by_type[Roomba])
+            "Battery %": lambda m: next(agent.battery for agent in m.agents_by_type[Roomba]),
+            "Roomba Steps": lambda m: next((agent.steps for agent in m.agents_by_type[Roomba]), 0),
+            "Total Time (steps)": lambda m: m.steps
         }
         self.datacollector = DataCollector(model_reporters)
 
@@ -91,3 +93,10 @@ class RandomModel(Model):
         # Convert max_steps to int because its detected as string from the input
         if len(self.agents_by_type[TrashAgent]) == 0 or self.steps >= int(self.max_steps):
             self.running = False
+
+            print("SIMULATION FINAL STATS")
+            df = self.datacollector.get_model_vars_dataframe()
+            last_row = df.tail(1).iloc[0]
+
+            for column in df.columns:
+                print(f"{column}: {last_row[column]:.2f}")
